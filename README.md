@@ -66,3 +66,9 @@ Submit with the **Fork → Clone → Branch → Pull Request** workflow. Do not 
 6. In the pull request, and in the project README, include setup steps, design decisions, known limitations, approximate time spent, and any AI tools used.
 
 Reply to the invitation email with the pull request link.
+
+## Questions and Assistance
+
+If you have any questions or need assistance at any stage of this assessment, please feel free to reach out to methindu@gundapower.com.
+
+Best of luck with your assessment!
