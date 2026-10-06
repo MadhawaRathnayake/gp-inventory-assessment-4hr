@@ -11,7 +11,20 @@ export const fetchProducts = createAsyncThunk(
   },
 )
 
-// TODO: createProduct → POST /api/products
+export const createProduct = createAsyncThunk(
+  "products/createProduct",
+  async (product, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${apiUrl}/api/products`, product)
+      return response.data
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Could not create product",
+      )
+    }
+  },
+)
+
 // TODO: updateProduct → PATCH /api/products/:sku
 // TODO: deleteProduct → DELETE /api/products/:sku
 // TODO: adjustStock → PATCH /api/products/:sku/stock
@@ -22,8 +35,14 @@ const productsSlice = createSlice({
     items: [],
     status: "idle",
     error: "",
+    saving: false,
+    saveError: "",
   },
-  reducers: {},
+  reducers: {
+    clearSaveError: (state) => {
+      state.saveError = ""
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchProducts.pending, (state) => {
@@ -38,7 +57,20 @@ const productsSlice = createSlice({
         state.status = "failed"
         state.error = action.error.message || "Could not load products"
       })
+      .addCase(createProduct.pending, (state) => {
+        state.saving = true
+        state.saveError = ""
+      })
+      .addCase(createProduct.fulfilled, (state, action) => {
+        state.saving = false
+        state.items.push(action.payload)
+      })
+      .addCase(createProduct.rejected, (state, action) => {
+        state.saving = false
+        state.saveError = action.payload
+      })
   },
 })
 
+export const { clearSaveError } = productsSlice.actions
 export default productsSlice.reducer

@@ -1,8 +1,11 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { fetchProducts } from "./features/products/productsSlice"
+import Modal from "./component/popup_model"
+import ProductForm from "./features/products/productForm"
 
 const App = () => {
+  const [showCreate, setShowCreate] = useState(false)
   const dispatch = useDispatch()
   const {
     items: products,
@@ -74,6 +77,16 @@ const App = () => {
 
       {status === "loading" && <p>Loading…</p>}
       {error && <div className="alert alert-danger">{error}</div>}
+
+      <button className="btn btn-primary mb-3" onClick={() => setShowCreate(true)}>
+        Add product
+      </button>
+
+      {showCreate && (
+      <Modal title="Add product" onClose={() => setShowCreate(false)}>
+        <ProductForm onDone={() => setShowCreate(false)} />
+        </Modal>
+      )}
 
       {status === "succeeded" && (
         <div className="card mb-4">

@@ -1,6 +1,7 @@
 const express = require("express")
 const cors = require("cors")
 const productRouter = require("./routers/product")
+const errorHandler = require("./middleware/errorHandler")
 
 const app = express()
 
@@ -13,9 +14,6 @@ app.get("/health", (req, res) => {
 
 app.use(productRouter)
 
-app.use((error, req, res, next) => {
-  console.error(error)
-  res.status(500).send({ message: "Internal server error" })
-})
+app.use(errorHandler)
 
 module.exports = app
