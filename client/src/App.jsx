@@ -4,11 +4,13 @@ import { fetchProducts } from "./features/products/productsSlice"
 import Modal from "./component/popup_model"
 import ProductForm from "./features/products/productForm"
 import DeleteProductConfirm from "./features/products/deleteProductConfirm"
+import AdjustStockForm from "./features/products/adjustStockForm"
 
 const App = () => {
   const [showCreate, setShowCreate] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
   const [deletingProduct, setDeletingProduct] = useState(null)
+  const [adjustingProduct, setAdjustingProduct] = useState(null)
   const dispatch = useDispatch()
   const {
     items: products,
@@ -103,6 +105,12 @@ const App = () => {
         </Modal>
       )}
 
+      {adjustingProduct && (
+        <Modal title={`Adjust stock: ${adjustingProduct.sku}`} onClose={() => setAdjustingProduct(null)}>
+          <AdjustStockForm product={adjustingProduct} onDone={() => setAdjustingProduct(null)} />
+        </Modal>
+      )}
+
       {status === "succeeded" && (
         <div className="card mb-4">
           <div className="table-responsive">
@@ -127,6 +135,12 @@ const App = () => {
                     <td className="text-end">{product.minStock}</td>
                     <td className="text-end">
                       <div className="d-inline-flex gap-2">
+                        <button
+                          className="btn btn-sm btn-outline-success"
+                          onClick={() => setAdjustingProduct(product)}
+                        >
+                          Adjust stock
+                        </button>
                         <button
                           className="btn btn-sm btn-outline-primary"
                           onClick={() => setEditingProduct(product)}

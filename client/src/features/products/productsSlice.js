@@ -75,7 +75,17 @@ export const deleteProduct = createAsyncThunk(
   },
 )
 
-// TODO: adjustStock → PATCH /api/products/:sku/stock
+export const adjustStock = createAsyncThunk(
+  "products/adjustStock",
+  async ({ sku, change, reason }, { rejectWithValue }) => {
+    try {
+      const response = await axios.patch(`${productUrl(sku)}/stock`, { change, reason })
+      return response.data
+    } catch (err) {
+      return rejectWithValue(toUserMessage(err, "Could not adjust stock"))
+    }
+  },
+)
 
 const productsSlice = createSlice({
   name: "products",
@@ -145,6 +155,21 @@ const productsSlice = createSlice({
       .addCase(deleteProduct.rejected, (state, action) => {
         state.saving = false
         state.saveError = action.payload || "Could not delete product"
+      })
+      .addCase(adjustStock.pending, (state) => {
+        state.saving = true
+        state.saveError = ""
+      })
+      .addCase(adjustStock.fulfilled, (state, action) => {
+        state.saving = false
+        const index = state.items.findIndex(
+          (product) => product._id === action.payload._id,
+        )
+        if (index !== -1) state.items[index] = action.payload
+      })
+      .addCase(adjustStock.rejected, (state, action) => {
+        state.saving = false
+        state.saveError = action.payload || "Could not adjust stock"
       })
   },
 })
