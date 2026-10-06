@@ -19,6 +19,11 @@ const errorHandler = (error, req, res, next) => {
     return res.status(400).send({ message })
   }
 
+  // mongoose cast errors (e.g. a string where a number is expected)
+  if (error instanceof mongoose.Error.CastError) {
+    return res.status(400).send({ message: `Invalid value for ${error.path}` })
+  }
+
   // malformed JSON body sent by the client
   if (error.type === "entity.parse.failed") {
     return res.status(400).send({ message: "Request body is not valid JSON" })

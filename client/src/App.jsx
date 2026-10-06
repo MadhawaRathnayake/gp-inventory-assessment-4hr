@@ -6,6 +6,7 @@ import ProductForm from "./features/products/productForm"
 
 const App = () => {
   const [showCreate, setShowCreate] = useState(false)
+  const [editingProduct, setEditingProduct] = useState(null)
   const dispatch = useDispatch()
   const {
     items: products,
@@ -83,8 +84,14 @@ const App = () => {
       </button>
 
       {showCreate && (
-      <Modal title="Add product" onClose={() => setShowCreate(false)}>
-        <ProductForm onDone={() => setShowCreate(false)} />
+        <Modal title="Add product" onClose={() => setShowCreate(false)}>
+          <ProductForm onDone={() => setShowCreate(false)} />
+        </Modal>
+      )}
+
+      {editingProduct && (
+        <Modal title={`Edit ${editingProduct.sku}`} onClose={() => setEditingProduct(null)}>
+          <ProductForm product={editingProduct} onDone={() => setEditingProduct(null)} />
         </Modal>
       )}
 
@@ -99,6 +106,7 @@ const App = () => {
                   <th>Category</th>
                   <th className="text-end">Stock</th>
                   <th className="text-end">Minimum Stock</th>
+                  <th className="text-end">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,6 +117,14 @@ const App = () => {
                     <td>{product.category}</td>
                     <td className="text-end">{product.stock}</td>
                     <td className="text-end">{product.minStock}</td>
+                    <td className="text-end">
+                      <button
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => setEditingProduct(product)}
+                      >
+                        Edit
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

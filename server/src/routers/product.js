@@ -16,10 +16,11 @@ router.get("/api/products", async (req, res, next) => {
   }
 })
 
-// TODO: POST /api/products
 router.post("/api/products", controller.createProduct)
-// TODO: PATCH /api/products/:sku
+
+router.patch("/api/products/:sku", controller.updateProduct)
 // TODO: DELETE /api/products/:sku
-// TODO: PATCH /api/products/:sku/stock
+
+router.patch("/api/products/:sku/stock", controller.adjustStock)
 
 module.exports = router
