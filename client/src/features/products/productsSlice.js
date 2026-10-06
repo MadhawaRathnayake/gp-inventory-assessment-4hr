@@ -95,10 +95,18 @@ const productsSlice = createSlice({
     error: "",
     saving: false,
     saveError: "",
+    // Which dialog is open: { type: "create" | "edit" | "delete" | "adjust", productId }
+    dialog: null,
   },
   reducers: {
     clearSaveError: (state) => {
       state.saveError = ""
+    },
+    openDialog: (state, action) => {
+      state.dialog = action.payload
+    },
+    closeDialog: (state) => {
+      state.dialog = null
     },
   },
   extraReducers: (builder) => {
@@ -174,5 +182,5 @@ const productsSlice = createSlice({
   },
 })
 
-export const { clearSaveError } = productsSlice.actions
+export const { clearSaveError, openDialog, closeDialog } = productsSlice.actions
 export default productsSlice.reducer

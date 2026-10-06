@@ -1,41 +1,26 @@
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { fetchProducts } from "./features/products/productsSlice"
+import { closeDialog, fetchProducts, openDialog } from "./features/products/productsSlice"
 import Modal from "./component/popup_model"
+import { DashboardSummary, RecentAdjustments } from "./features/products/dashboard"
+import ProductTable from "./features/products/productTable"
 import ProductForm from "./features/products/productForm"
 import DeleteProductConfirm from "./features/products/deleteProductConfirm"
 import AdjustStockForm from "./features/products/adjustStockForm"
 
 const App = () => {
-  const [showCreate, setShowCreate] = useState(false)
-  const [editingProduct, setEditingProduct] = useState(null)
-  const [deletingProduct, setDeletingProduct] = useState(null)
-  const [adjustingProduct, setAdjustingProduct] = useState(null)
   const dispatch = useDispatch()
-  const {
-    items: products,
-    status,
-    error,
-  } = useSelector((state) => state.products)
+  const { items: products, dialog, saving } = useSelector((state) => state.products)
 
-  const recentAdjustments = products
-    .flatMap((product) =>
-      (product.stockAdjustments || []).map((adjustment) => ({
-        ...adjustment,
-        sku: product.sku,
-        name: product.name,
-      })),
-    )
-    .sort((a, b) => new Date(b.adjustedAt) - new Date(a.adjustedAt))
-    .slice(0, 10)
-  const totalProducts = products.length
-  const totalStock = products.reduce(
-    (sum, product) => sum + (product.stock || 0),
-    0,
-  )
-  const lowStockCount = products.filter(
-    (product) => product.stock <= product.minStock,
-  ).length
+  // Read the product from the store so dialogs always show the latest values
+  const dialogProduct = dialog?.productId
+    ? products.find((product) => product._id === dialog.productId)
+    : null
+
+  // Don't close a dialog while its request is still running
+  const close = () => {
+    if (!saving) dispatch(closeDialog())
+  }
 
   useEffect(() => {
     dispatch(fetchProducts())
@@ -46,141 +31,43 @@ const App = () => {
       <p className="text-uppercase text-secondary small mb-1">
         Gunda Power · Associate Assessment
       </p>
-      <h1 className="h3 mb-2">Mini Inventory Management System</h1>
-      <p className="text-secondary">
-        The list and dashboard read from Redux. Add a way to add, edit, and
-        remove products, plus a separate stock-adjustment form. See
-        ASSESSMENT.md.
-      </p>
+      <h1 className="h3 mb-4">Mini Inventory Management System</h1>
 
-      <section className="row g-3 mb-4">
-        <div className="col-sm-4">
-          <div className="card">
-            <div className="card-body">
-              <div className="text-secondary small">Products</div>
-              <div className="fs-4">{totalProducts}</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-sm-4">
-          <div className="card">
-            <div className="card-body">
-              <div className="text-secondary small">Stock units</div>
-              <div className="fs-4">{totalStock}</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-sm-4">
-          <div className="card">
-            <div className="card-body">
-              <div className="text-secondary small">Low stock</div>
-              <div className="fs-4">{lowStockCount}</div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <DashboardSummary />
 
-      {status === "loading" && <p>Loading…</p>}
-      {error && <div className="alert alert-danger">{error}</div>}
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2 className="h5 mb-0">Products</h2>
+        <button className="btn btn-primary" onClick={() => dispatch(openDialog({ type: "create" }))}>
+          Add product
+        </button>
+      </div>
 
-      <button className="btn btn-primary mb-3" onClick={() => setShowCreate(true)}>
-        Add product
-      </button>
+      <ProductTable />
+      <RecentAdjustments />
 
-      {showCreate && (
-        <Modal title="Add product" onClose={() => setShowCreate(false)}>
-          <ProductForm onDone={() => setShowCreate(false)} />
+      {dialog?.type === "create" && (
+        <Modal title="Add product" onClose={close}>
+          <ProductForm onDone={close} />
         </Modal>
       )}
 
-      {editingProduct && (
-        <Modal title={`Edit ${editingProduct.sku}`} onClose={() => setEditingProduct(null)}>
-          <ProductForm product={editingProduct} onDone={() => setEditingProduct(null)} />
+      {dialog?.type === "edit" && dialogProduct && (
+        <Modal title={`Edit ${dialogProduct.sku}`} onClose={close}>
+          <ProductForm product={dialogProduct} onDone={close} />
         </Modal>
       )}
 
-      {deletingProduct && (
-        <Modal title={`Remove ${deletingProduct.sku}`} onClose={() => setDeletingProduct(null)}>
-          <DeleteProductConfirm product={deletingProduct} onDone={() => setDeletingProduct(null)} />
+      {dialog?.type === "delete" && dialogProduct && (
+        <Modal title={`Remove ${dialogProduct.sku}`} onClose={close}>
+          <DeleteProductConfirm product={dialogProduct} onDone={close} />
         </Modal>
       )}
 
-      {adjustingProduct && (
-        <Modal title={`Adjust stock: ${adjustingProduct.sku}`} onClose={() => setAdjustingProduct(null)}>
-          <AdjustStockForm product={adjustingProduct} onDone={() => setAdjustingProduct(null)} />
+      {dialog?.type === "adjust" && dialogProduct && (
+        <Modal title={`Adjust stock: ${dialogProduct.sku}`} onClose={close}>
+          <AdjustStockForm product={dialogProduct} onDone={close} />
         </Modal>
       )}
-
-      {status === "succeeded" && (
-        <div className="card mb-4">
-          <div className="table-responsive">
-            <table className="table mb-0 align-middle">
-              <thead>
-                <tr>
-                  <th>SKU</th>
-                  <th>Name</th>
-                  <th>Category</th>
-                  <th className="text-end">Stock</th>
-                  <th className="text-end">Minimum Stock</th>
-                  <th className="text-end">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => (
-                  <tr key={product._id}>
-                    <td className="font-monospace">{product.sku}</td>
-                    <td>{product.name}</td>
-                    <td>{product.category}</td>
-                    <td className="text-end">{product.stock}</td>
-                    <td className="text-end">{product.minStock}</td>
-                    <td className="text-end">
-                      <div className="d-inline-flex gap-2">
-                        <button
-                          className="btn btn-sm btn-outline-success"
-                          onClick={() => setAdjustingProduct(product)}
-                        >
-                          Adjust stock
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline-primary"
-                          onClick={() => setEditingProduct(product)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => setDeletingProduct(product)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      <section className="card">
-        <div className="card-body">
-          <h2 className="h6">Recent stock adjustments</h2>
-          {recentAdjustments.length === 0 ? (
-            <p className="text-secondary mb-0">
-              None yet. These appear after a stock adjustment is saved.
-            </p>
-          ) : (
-            <ul className="mb-0">
-              {recentAdjustments.map((adjustment) => (
-                <li key={adjustment._id}>
-                  {adjustment.sku}: {adjustment.change} ({adjustment.reason})
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
     </main>
   )
 }
