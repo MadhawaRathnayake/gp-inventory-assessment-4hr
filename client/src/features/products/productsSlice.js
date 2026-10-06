@@ -62,7 +62,19 @@ export const updateProduct = createAsyncThunk(
     }
   },
 )
-// TODO: deleteProduct → DELETE /api/products/:sku
+
+export const deleteProduct = createAsyncThunk(
+  "products/deleteProduct",
+  async (sku, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(productUrl(sku))
+      return response.data
+    } catch (err) {
+      return rejectWithValue(toUserMessage(err, "Could not delete product"))
+    }
+  },
+)
+
 // TODO: adjustStock → PATCH /api/products/:sku/stock
 
 const productsSlice = createSlice({
@@ -119,6 +131,20 @@ const productsSlice = createSlice({
       .addCase(updateProduct.rejected, (state, action) => {
         state.saving = false
         state.saveError = action.payload || "Could not update product"
+      })
+      .addCase(deleteProduct.pending, (state) => {
+        state.saving = true
+        state.saveError = ""
+      })
+      .addCase(deleteProduct.fulfilled, (state, action) => {
+        state.saving = false
+        state.items = state.items.filter(
+          (product) => product._id !== action.payload._id,
+        )
+      })
+      .addCase(deleteProduct.rejected, (state, action) => {
+        state.saving = false
+        state.saveError = action.payload || "Could not delete product"
       })
   },
 })

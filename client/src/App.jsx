@@ -3,10 +3,12 @@ import { useDispatch, useSelector } from "react-redux"
 import { fetchProducts } from "./features/products/productsSlice"
 import Modal from "./component/popup_model"
 import ProductForm from "./features/products/productForm"
+import DeleteProductConfirm from "./features/products/deleteProductConfirm"
 
 const App = () => {
   const [showCreate, setShowCreate] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
+  const [deletingProduct, setDeletingProduct] = useState(null)
   const dispatch = useDispatch()
   const {
     items: products,
@@ -95,6 +97,12 @@ const App = () => {
         </Modal>
       )}
 
+      {deletingProduct && (
+        <Modal title={`Remove ${deletingProduct.sku}`} onClose={() => setDeletingProduct(null)}>
+          <DeleteProductConfirm product={deletingProduct} onDone={() => setDeletingProduct(null)} />
+        </Modal>
+      )}
+
       {status === "succeeded" && (
         <div className="card mb-4">
           <div className="table-responsive">
@@ -118,12 +126,20 @@ const App = () => {
                     <td className="text-end">{product.stock}</td>
                     <td className="text-end">{product.minStock}</td>
                     <td className="text-end">
-                      <button
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => setEditingProduct(product)}
-                      >
-                        Edit
-                      </button>
+                      <div className="d-inline-flex gap-2">
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => setEditingProduct(product)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => setDeletingProduct(product)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

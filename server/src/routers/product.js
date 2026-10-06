@@ -19,7 +19,8 @@ router.get("/api/products", async (req, res, next) => {
 router.post("/api/products", controller.createProduct)
 
 router.patch("/api/products/:sku", controller.updateProduct)
-// TODO: DELETE /api/products/:sku
+
+router.delete("/api/products/:sku", controller.deleteProduct)
 
 router.patch("/api/products/:sku/stock", controller.adjustStock)
 

@@ -50,6 +50,7 @@ const updateProduct = async (req, res, next) => {
   }
 }
 
+
 const adjustStock = async (req, res, next) => {
   try {
     const { change, reason } = validateStockAdjustment(req.body)
@@ -78,4 +79,23 @@ const adjustStock = async (req, res, next) => {
   }
 }
 
-module.exports = { createProduct, updateProduct, adjustStock}
+
+const deleteProduct = async (req, res, next) => {
+  try {
+    // Soft delete: only active products can be deleted
+    const product = await Product.findOneAndUpdate(
+      { sku: req.params.sku, deleted: { $ne: true } },
+      { deleted: true },
+      { new: true },
+    )
+    if (!product) {
+      throw ApiError.notFound(`Product with sku '${req.params.sku}' not found`)
+    }
+
+    res.send(product)
+  } catch (error) {
+    next(error)
+  }
+}
+
+module.exports = { createProduct, updateProduct, adjustStock, deleteProduct }
